@@ -620,6 +620,90 @@ textarea:focus { border-color: var(--amber); }
   font-size: 0.85rem;
 }
 
+.email-item .btn-save-contact {
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0 4px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.email-item .btn-save-contact:hover { color: var(--amber); }
+
+.btn-load-contact {
+  background: none;
+  border: 1px solid var(--amber);
+  color: var(--amber-dark);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.btn-load-contact:hover {
+  background: var(--amber-pale);
+  color: var(--amber-dark);
+}
+
+.saved-contact-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+.btn-edit-contact {
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 0 4px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.btn-edit-contact:hover { color: var(--amber-dark); }
+
+.email-item.editing {
+  background: var(--amber-pale);
+  border-left: 2px solid var(--amber);
+  padding-left: 10px;
+  gap: 7px;
+}
+
+.email-item.editing .sc-edit-name,
+.email-item.editing .sc-edit-email {
+  border: none;
+  border-bottom: 1px solid var(--amber);
+  background: transparent;
+  padding: 4px 2px;
+  font-size: 0.82rem;
+  outline: none;
+  min-width: 0;
+}
+
+.email-item.editing .sc-edit-name  { flex: 0 0 100px; font-family: var(--font-body); }
+.email-item.editing .sc-edit-email { flex: 1; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-light); }
+
+.saved-contacts-list { display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; }
+
+
 /* ── Responsive ── */
 @media (max-width: 720px) {
   .broadsheet {
