@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkDrop — Regen Academia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Libre+Baskerville:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body>
+
+<div class="paper-texture"></div>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-top">
+      <span class="edition-tag" style="color: black;"><b>Regen Academia &mdash; Internal Tools</b></span>
+      <span class="edition-date" id="todayDate" style="color: black;" ></span>
+    </div>
+    <div class="masthead-rule"></div>
+    <div class="masthead-title-row">
+      <div class="masthead-left">
+        <p class="drop-quote">&ldquo;Share knowledge<br>as freely as<br>it was given.&rdquo;</p>
+      </div>
+      <div class="masthead-center">
+        <h1 class="paper-title">LinkDrop</h1>
+        <p class="paper-subtitle">Whiteboard Notes Distribution</p>
+      </div>
+      <div class="masthead-right">
+        <div class="stat-block">
+          <div class="stat-num" id="capDisplay">0</div>
+          <div class="stat-lbl">of 40 recipients</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num" id="selDisplay">0</div>
+          <div class="stat-lbl">selected</div>
+        </div>
+      </div>
+    </div>
+    <div class="masthead-rule thick"></div>
+  </div>
+</div>
+
+<div class="broadsheet">
+
+  <div class="col col-left">
+
+    <section class="section-block">
+      <div class="section-kicker clickable" onclick="toggleConfig()">
+        <span>Email Service Setup</span>
+        <span class="cred-status">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="configStatus">NOT SET</span>
+          <span class="toggle-arrow" id="configArrow">&#9658;</span>
+        </span>
+      </div>
+      <div class="col-rule"></div>
+      <div class="config-fields" id="configFields">
+        <label class="field-group">
+          <span class="field-lbl">Public Key</span>
+          <input type="text" id="ejPublicKey" placeholder="kj1lZVVuBOF56XPYs" oninput="updateConfigBadge()">
+        </label>
+        <label class="field-group">
+          <span class="field-lbl">Service ID</span>
+          <input type="text" id="ejServiceId" placeholder="service_xxxxxxx" oninput="updateConfigBadge()">
+        </label>
+        <label class="field-group">
+          <span class="field-lbl">Template ID</span>
+          <input type="text" id="ejTemplateId" placeholder="template_xxxxxxx" oninput="updateConfigBadge()">
+        </label>
+        <button class="btn-save" onclick="saveConfig()">Save Credentials</button>
+        <p class="field-hint">Saved to your browser &mdash; persists across sessions.</p>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-kicker">Whiteboard Link</div>
+      <div class="col-rule"></div>
+      <label class="field-group">
+        <span class="field-lbl">Session URL</span>
+        <input type="url" id="linkInput" placeholder="https://whiteboard.example.com/session">
+      </label>
+      <label class="field-group" style="margin-top:16px">
+        <span class="field-lbl">Accompanying Note <em class="optional">(optional)</em></span>
+        <textarea id="msgInput" placeholder="Here are today's session notes from Regen Academia&hellip;"></textarea>
+      </label>
+    </section>
+
+    <section class="section-block">
+      <div class="section-kicker">Dispatch</div>
+      <div class="col-rule"></div>
+      <div class="dispatch-area">
+        <button class="btn-primary" id="btnSelected" onclick="sendSelected()">&#9889; Send to Selected</button>
+        <button class="btn-secondary" id="btnAll" onclick="confirmSendAll()">&#9993; Send to All</button>
+      </div>
+      <div class="progress-wrap" id="progressWrap" style="display:none">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-label" id="progressLabel">0%</span>
+      </div>
+      <div class="status-log" id="statusLog"></div>
+    </section>
+
+  </div>
+
+  <div class="col-divider"></div>
+
+  <div class="col col-right">
+    <section class="section-block">
+      <div class="section-kicker">
+        <span>Recipients</span>
+        <div class="list-controls">
+          <button class="link-btn" onclick="selectAll(true)">All</button>
+          <span class="muted-sep">&middot;</span>
+          <button class="link-btn" onclick="selectAll(false)">None</button>
+          <span class="muted-sep">&middot;</span>
+          <button class="link-btn" onclick="exportEmails()">Export</button>
+          <span class="muted-sep">&middot;</span>
+          <button class="link-btn" onclick="document.getElementById('importFile').click()">Import</button>
+          <input type="file" id="importFile" accept=".csv,.txt" style="display:none" onchange="importEmails(this)">
+        </div>
+      </div>
+      <div class="col-rule"></div>
+
+      <div class="add-row">
+        <input type="text"  id="newName"  placeholder="Name (optional)">
+        <input type="email" id="newEmail" placeholder="student@regen.ac">
+        <button class="btn-add" onclick="addEmail()">Add</button>
+      </div>
+
+      <div class="email-list" id="emailList">
+        <div class="empty-state">
+          <span class="empty-ornament">&#10022;</span>
+          <p>No recipients yet.<br>Add student emails above.</p>
+        </div>
+      </div>
+
+      <div class="bulk-footer">
+        <button class="link-btn danger" onclick="clearAllEmails()">&#10007; Clear all recipients</button>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay" style="display:none">
+  <div class="modal-paper">
+    <div class="modal-rule"></div>
+    <p class="modal-title" id="modalTitle"></p>
+    <p class="modal-body"  id="modalBody"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary"   id="modalConfirm">Confirm &amp; Send</button>
+    </div>
+    <div class="modal-rule"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
