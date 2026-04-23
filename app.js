@@ -1,19 +1,23 @@
 // ── Constants ─────────────────────────────────────────
-const EMAIL_CAP = 40;
-const LS_EMAILS = 'regen_emails';
-const LS_CREDS  = 'regen_creds';
+const EMAIL_CAP    = 40;
+const LS_EMAILS    = 'regen_emails';
+const LS_CREDS     = 'regen_creds';
+const LS_CONTACTS  = 'regen_contacts';
 
 // ── State ──────────────────────────────────────────────
-let emails  = [];
-let sending = false;
+let emails         = [];
+let savedContacts  = [];
+let sending        = false;
 
 // ── Init ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   setTodayDate();
   loadCreds();
   loadEmails();
+  loadSavedContacts();
   updateConfigBadge();
   renderList();
+  renderSavedContacts();
 
   document.getElementById('newEmail').addEventListener('keydown', e => {
     if (e.key === 'Enter') addEmail();
@@ -195,6 +199,7 @@ function renderList() {
         onchange="emails[${i}].selected=this.checked; saveEmails(); updateCounters();">
       <span class="name">${escHtml(e.name)}</span>
       <span class="addr">${escHtml(e.email)}</span>
+      <button class="btn-save-contact" onclick="saveContactFromSession(${i})" title="Save to contacts">&#9733;</button>
       <button class="btn-remove" onclick="removeEmail(${i})" title="Remove">&#10005;</button>
     </div>
   `).join('');
@@ -207,6 +212,133 @@ function escHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+// ── Saved Contacts ─────────────────────────────────────
+function loadSavedContacts() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_CONTACTS) || '[]');
+    if (Array.isArray(s)) savedContacts = s;
+  } catch (_) { savedContacts = []; }
+}
+
+function persistContacts() {
+  localStorage.setItem(LS_CONTACTS, JSON.stringify(savedContacts));
+}
+
+function saveContact() {
+  const name  = document.getElementById('scName').value.trim();
+  const email = document.getElementById('scEmail').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) return alert('Please enter a valid email address.');
+  if (savedContacts.some(c => c.email === email)) return alert('This contact is already saved.');
+  savedContacts.push({ name: name || email.split('@')[0], email });
+  persistContacts();
+  document.getElementById('scName').value  = '';
+  document.getElementById('scEmail').value = '';
+  renderSavedContacts();
+  log(`Contact saved: ${email}`, 'info');
+}
+
+function saveContactFromSession(index) {
+  const e = emails[index];
+  if (savedContacts.some(c => c.email === e.email)) {
+    log(`Already saved: ${e.email}`, 'info'); return;
+  }
+  savedContacts.push({ name: e.name, email: e.email });
+  persistContacts();
+  renderSavedContacts();
+  log(`Saved to contacts: ${e.email}`, 'ok');
+}
+
+function deleteSavedContact(index) {
+  if (!confirm(`Remove ${savedContacts[index].email} from saved contacts?`)) return;
+  savedContacts.splice(index, 1);
+  persistContacts();
+  renderSavedContacts();
+}
+
+function loadContactToSession(index) {
+  const c = savedContacts[index];
+  if (emails.length >= EMAIL_CAP) return alert(`Recipient cap of ${EMAIL_CAP} reached.`);
+  if (emails.some(e => e.email === c.email)) { alert('Already in the session list.'); return; }
+  emails.push({ name: c.name, email: c.email, selected: true });
+  saveEmails();
+  renderList();
+}
+
+function loadAllToSession() {
+  let added = 0;
+  for (const c of savedContacts) {
+    if (emails.length >= EMAIL_CAP) break;
+    if (!emails.some(e => e.email === c.email)) {
+      emails.push({ name: c.name, email: c.email, selected: true });
+      added++;
+    }
+  }
+  if (added === 0) { alert('All saved contacts are already in the session list.'); return; }
+  saveEmails();
+  renderList();
+  log(`Loaded ${added} contact(s) to session.`, 'info');
+}
+
+function renderSavedContacts() {
+  const list = document.getElementById('savedContactsList');
+  if (savedContacts.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-ornament">&#10022;</span>
+        <p>No saved contacts yet.<br>Save recipients to reuse them.</p>
+      </div>`;
+    return;
+  }
+  list.innerHTML = savedContacts.map((c, i) => `
+    <div class="email-item" id="sc-row-${i}">
+      <span class="saved-contact-dot"></span>
+      <span class="name">${escHtml(c.name)}</span>
+      <span class="addr">${escHtml(c.email)}</span>
+      <button class="btn-load-contact" onclick="loadContactToSession(${i})" title="Add to session">+ Add</button>
+      <button class="btn-edit-contact" onclick="editSavedContact(${i})" title="Edit">&#9998;</button>
+      <button class="btn-remove" onclick="deleteSavedContact(${i})" title="Remove">&#10005;</button>
+    </div>
+  `).join('');
+}
+
+function editSavedContact(index) {
+  const c   = savedContacts[index];
+  const row = document.getElementById(`sc-row-${index}`);
+  row.classList.add('editing');
+  row.innerHTML = `
+    <span class="saved-contact-dot"></span>
+    <input class="sc-edit-name" type="text"  value="${escHtml(c.name)}"  placeholder="Name">
+    <input class="sc-edit-email" type="email" value="${escHtml(c.email)}" placeholder="Email">
+    <button class="btn-load-contact" onclick="saveEditedContact(${index})" title="Save">&#10003; Save</button>
+    <button class="btn-remove" onclick="cancelEdit()" title="Cancel">&#10005;</button>
+  `;
+  row.querySelector('.sc-edit-name').focus();
+  row.querySelector('.sc-edit-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveEditedContact(index);
+    if (e.key === 'Escape') cancelEdit();
+  });
+  row.querySelector('.sc-edit-name').addEventListener('keydown', e => {
+    if (e.key === 'Escape') cancelEdit();
+  });
+}
+
+function saveEditedContact(index) {
+  const row   = document.getElementById(`sc-row-${index}`);
+  const name  = row.querySelector('.sc-edit-name').value.trim();
+  const email = row.querySelector('.sc-edit-email').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) return alert('Please enter a valid email address.');
+  const duplicate = savedContacts.findIndex((c, i) => c.email === email && i !== index);
+  if (duplicate !== -1) return alert('Another contact with this email already exists.');
+  savedContacts[index] = { name: name || email.split('@')[0], email };
+  persistContacts();
+  renderSavedContacts();
+  log(`Contact updated: ${email}`, 'ok');
+}
+
+function cancelEdit() {
+  renderSavedContacts();
 }
 
 // ── Logging ────────────────────────────────────────────
