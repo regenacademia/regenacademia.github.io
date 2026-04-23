@@ -141,6 +141,29 @@
         <button class="link-btn danger" onclick="clearAllEmails()">&#10007; Clear all recipients</button>
       </div>
     </section>
+
+    <section class="section-block">
+      <div class="section-kicker">
+        <span>Saved Contacts</span>
+        <div class="list-controls">
+          <button class="link-btn" onclick="loadAllToSession()">Load All</button>
+        </div>
+      </div>
+      <div class="col-rule"></div>
+
+      <div class="add-row">
+        <input type="text"  id="scName"  placeholder="Name (optional)">
+        <input type="email" id="scEmail" placeholder="student@regen.ac">
+        <button class="btn-add" onclick="saveContact()">Save</button>
+      </div>
+
+      <div class="saved-contacts-list" id="savedContactsList">
+        <div class="empty-state">
+          <span class="empty-ornament">&#10022;</span>
+          <p>No saved contacts yet.<br>Save recipients to reuse them.</p>
+        </div>
+      </div>
+    </section>
   </div>
 
 </div>
